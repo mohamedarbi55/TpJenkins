@@ -20,22 +20,16 @@ pipeline {
             }
         }
 
-       stage('Run') {
-    steps {
-        script {
-            echo "Running Docker container..."
-            try {
-                def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
-                CONTAINER_ID = output
-                echo "Container started with ID: ${CONTAINER_ID}"
-            } catch (Exception e) {
-                echo "Error starting Docker container: ${e.getMessage()}"
-                throw e
+        stage('Run') {
+            steps {
+                script {
+                    echo "Running Docker container..."
+                    def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
+                    CONTAINER_ID = output
+                    echo "Container started with ID: ${CONTAINER_ID}"
+                }
             }
         }
-    }
-}
-
 
         stage('Test') {
             steps {
