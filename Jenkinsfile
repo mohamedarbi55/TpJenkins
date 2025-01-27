@@ -4,7 +4,7 @@ pipeline {
     environment {
         CONTAINER_ID = ''
         SUM_PY_PATH = 'sum.py'  
-        DIR_PATH = 'Dockerfile'  
+        DIR_PATH = './Dockerfile'  
         TEST_FILE_PATH = 'variables.txt'  
         DOCKERHUB_USERNAME = 'kaloucha55'  
         DOCKERHUB_REPO = 'kaloucha55/getting-started'  
