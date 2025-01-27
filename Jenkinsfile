@@ -20,16 +20,22 @@ pipeline {
             }
         }
 
-        stage('Run') {
-            steps {
-                script {
-                    echo "Running Docker container..."
-                    def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
-                    CONTAINER_ID = output
-                    echo "Container started with ID: ${CONTAINER_ID}"
-                }
-            }
+      stage('Run') {
+    steps {
+        script {
+            echo "Running Docker container..."
+            
+            // Supprimer le conteneur existant s'il y en a un
+            bat 'docker rm -f sum_container || true'
+            
+            // Lancer un nouveau conteneur et capturer son ID
+            def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
+            CONTAINER_ID = output
+            echo "Container started with ID: ${CONTAINER_ID}"
         }
+    }
+}
+
 
         stage('Test') {
             steps {
