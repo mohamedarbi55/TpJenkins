@@ -4,7 +4,7 @@ pipeline {
     environment {
         CONTAINER_ID = ''
         SUM_PY_PATH = 'sum.py'  
-        DIR_PATH = './Dockerfile'  
+        DIR_PATH = '.'  // Assuming the Dockerfile is in the root of the workspace
         TEST_FILE_PATH = 'variables.txt'  
         DOCKERHUB_USERNAME = 'kaloucha55'  
         DOCKERHUB_REPO = 'kaloucha55/getting-started'  
@@ -15,7 +15,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    bat "docker build -t sum_app ${DIR_PATH}"
+                    bat "docker build -t sum_app -f ${DIR_PATH}/Dockerfile ${DIR_PATH}"
                 }
             }
         }
