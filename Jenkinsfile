@@ -24,12 +24,18 @@ pipeline {
     steps {
         script {
             echo "Running Docker container..."
+            // Lancer le conteneur et obtenir l'ID
             def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
             CONTAINER_ID = output
             echo "Container started with ID: ${CONTAINER_ID}"
-            
-            // Vérifie que le conteneur est bien démarré
-            bat(script: "docker ps -a", returnStdout: true)
+
+            // Vérifie que le conteneur est en cours d'exécution
+            def containerStatus = bat(script: "docker ps -f name=${CONTAINER_ID}", returnStdout: true).trim()
+            if (containerStatus.contains(CONTAINER_ID)) {
+                echo "Container is running."
+            } else {
+                error "Container is not running. Please check the logs."
+            }
         }
     }
 }
