@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         CONTAINER_ID = ''
-        SUM_PY_PATH = 'C:/Users/larab/jenkins-docker-tp/jenkins-docker-tp/sum.py'  
-        DIR_PATH = 'C:/Users/larab/jenkins-docker-tp/jenkins-docker-tp/Dockerfile'  
-        TEST_FILE_PATH = 'C:/Users/larab/jenkins-docker-tp/jenkins-docker-tp/variables.txt'  
+        SUM_PY_PATH = 'sum.py'  
+        DIR_PATH = 'Dockerfile'  
+        TEST_FILE_PATH = 'variables.txt'  
         DOCKERHUB_USERNAME = 'kaloucha55'  
         DOCKERHUB_REPO = 'kaloucha55/getting-started'  
     }
