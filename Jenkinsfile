@@ -21,15 +21,19 @@ pipeline {
         }
 
         stage('Run') {
-            steps {
-                script {
-                    echo "Running Docker container..."
-                    def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
-                    CONTAINER_ID = output
-                    echo "Container started with ID: ${CONTAINER_ID}"
-                }
-            }
+    steps {
+        script {
+            echo "Running Docker container..."
+            def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
+            CONTAINER_ID = output
+            echo "Container started with ID: ${CONTAINER_ID}"
+            
+            // Vérifie que le conteneur est bien démarré
+            bat(script: "docker ps -a", returnStdout: true)
         }
+    }
+}
+
 
         stage('Test') {
     steps {
@@ -40,12 +44,13 @@ pipeline {
                 def arg1 = vars[0]
                 def arg2 = vars[1]
                 def expectedSum = vars[2].toFloat()
-                
+
                 echo "Running test: ${arg1} + ${arg2}..."
+                echo "Executing in container: ${CONTAINER_ID}"
                 def output = bat(script: "docker exec ${CONTAINER_ID} python ${SUM_PY_PATH} ${arg1} ${arg2}", returnStdout: true).trim()
                 echo "Output from container: ${output}"
                 def result = output.toFloat()
-                
+
                 if (result == expectedSum) {
                     echo "Test passed for input: ${arg1} + ${arg2}. Expected sum: ${expectedSum}, got: ${result}"
                 } else {
@@ -55,6 +60,7 @@ pipeline {
         }
     }
 }
+
 
 
         stage('Deploy') {
