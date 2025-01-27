@@ -32,27 +32,30 @@ pipeline {
         }
 
         stage('Test') {
-            steps {
-                script {
-                    def testLines = readFile(TEST_FILE_PATH).split('\n')
-                    testLines.each { line ->
-                        def vars = line.split(' ')
-                        def arg1 = vars[0]
-                        def arg2 = vars[1]
-                        def expectedSum = vars[2].toFloat()
-                        
-                        def output = bat(script: "docker exec ${CONTAINER_ID} python ${SUM_PY_PATH} ${arg1} ${arg2}", returnStdout: true).trim()
-                        def result = output.toFloat()
-                        
-                        if (result == expectedSum) {
-                            echo "Test passed for input: ${arg1} + ${arg2}. Expected sum: ${expectedSum}, got: ${result}"
-                        } else {
-                            error "Test failed for input: ${arg1} + ${arg2}. Expected sum: ${expectedSum}, but got: ${result}"
-                        }
-                    }
+    steps {
+        script {
+            def testLines = readFile(TEST_FILE_PATH).split('\n')
+            testLines.each { line ->
+                def vars = line.split(' ')
+                def arg1 = vars[0]
+                def arg2 = vars[1]
+                def expectedSum = vars[2].toFloat()
+                
+                echo "Running test: ${arg1} + ${arg2}..."
+                def output = bat(script: "docker exec ${CONTAINER_ID} python ${SUM_PY_PATH} ${arg1} ${arg2}", returnStdout: true).trim()
+                echo "Output from container: ${output}"
+                def result = output.toFloat()
+                
+                if (result == expectedSum) {
+                    echo "Test passed for input: ${arg1} + ${arg2}. Expected sum: ${expectedSum}, got: ${result}"
+                } else {
+                    error "Test failed for input: ${arg1} + ${arg2}. Expected sum: ${expectedSum}, but got: ${result}"
                 }
             }
         }
+    }
+}
+
 
         stage('Deploy') {
             steps {
