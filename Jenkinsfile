@@ -15,7 +15,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    sh "docker build -t sum_app ${DIR_PATH}"
+                    bat "docker build -t sum_app ${DIR_PATH}"
                 }
             }
         }
