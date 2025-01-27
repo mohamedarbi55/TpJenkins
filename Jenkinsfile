@@ -47,7 +47,7 @@ pipeline {
                         def arg2 = vars[1]
                         def expectedSum = vars[2].toFloat()
                         
-                        def output = bat(script: "docker exec ${CONTAINER_ID} python ${SUM_PY_PATH} ${arg1} ${arg2}", returnStdout: true).trim()
+                        def output = sh(script: "docker exec ${CONTAINER_ID} python ${SUM_PY_PATH} ${arg1} ${arg2}", returnStdout: true).trim()
                         def result = output.toFloat()
                         
                         if (result == expectedSum) {
@@ -64,11 +64,11 @@ pipeline {
             steps {
                 script {
                     echo "Logging in to DockerHub..."
-                    bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
+                    sh "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
                     echo "Tagging the Docker image..."
-                    bat "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
+                    sh "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
                     echo "Pushing the Docker image to DockerHub..."
-                    bat "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
+                    sh "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
                 }
             }
         }
@@ -78,8 +78,8 @@ pipeline {
         always {
             script {
                 echo "Stopping and removing Docker container..."
-                bat "docker stop ${CONTAINER_ID}"
-                bat "docker rm ${CONTAINER_ID}"
+                sh "docker stop ${CONTAINER_ID}"
+                sh "docker rm ${CONTAINER_ID}"
             }
         }
     }
