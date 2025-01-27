@@ -25,7 +25,7 @@ pipeline {
         script {
             echo "Running Docker container..."
             try {
-                def output = sh(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
+                def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
                 CONTAINER_ID = output
                 echo "Container started with ID: ${CONTAINER_ID}"
             } catch (Exception e) {
