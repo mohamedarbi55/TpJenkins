@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         CONTAINER_ID = ''
-        SUM_PY_PATH = 'C:\\Users\\larab\\jenkins-docker-tp\\jenkins-docker-tp\\sum.py'  
-        DIR_PATH = 'C:\\Users\\larab\\jenkins-docker-tp\\jenkins-docker-tp\\Dockerfile'  
-        TEST_FILE_PATH = 'C:\\Users\\larab\\jenkins-docker-tp\\jenkins-docker-tp\\variables.txt'  
+        SUM_PY_PATH = 'C:/Users/larab/jenkins-docker-tp/jenkins-docker-tp/sum.py'  
+        DIR_PATH = 'C:/Users/larab/jenkins-docker-tp/jenkins-docker-tp/Dockerfile'  
+        TEST_FILE_PATH = 'C:/Users/larab/jenkins-docker-tp/jenkins-docker-tp/variables.txt'  
         DOCKERHUB_USERNAME = 'kaloucha55'  
         DOCKERHUB_REPO = 'kaloucha55/getting-started'  
     }
@@ -15,7 +15,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    bat "docker build -t sum_app ${DIR_PATH}"
+                    sh "docker build -t sum_app ${DIR_PATH}"
                 }
             }
         }
@@ -24,7 +24,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Docker container..."
-                    def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
+                    def output = sh(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
                     CONTAINER_ID = output
                     echo "Container started with ID: ${CONTAINER_ID}"
                 }
@@ -40,10 +40,10 @@ pipeline {
                         def arg1 = vars[0]
                         def arg2 = vars[1]
                         def expectedSum = vars[2].toFloat()
-
-                        def output = bat(script: "docker exec ${CONTAINER_ID} python ${SUM_PY_PATH} ${arg1} ${arg2}", returnStdout: true).trim()
-
+                        
+                        def output = sh(script: "docker exec ${CONTAINER_ID} python ${SUM_PY_PATH} ${arg1} ${arg2}", returnStdout: true).trim()
                         def result = output.toFloat()
+                        
                         if (result == expectedSum) {
                             echo "Test passed for input: ${arg1} + ${arg2}. Expected sum: ${expectedSum}, got: ${result}"
                         } else {
@@ -54,28 +54,26 @@ pipeline {
             }
         }
 
-        post {
-            always {
-                script {
-                    echo "Stopping and removing Docker container..."
-                    bat "docker stop ${CONTAINER_ID}"
-                    bat "docker rm ${CONTAINER_ID}"
-                }
-            }
-        }
-
         stage('Deploy') {
             steps {
                 script {
                     echo "Logging in to DockerHub..."
-                    bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
-                    
+                    sh "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
                     echo "Tagging the Docker image..."
-                    bat "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
-                    
+                    sh "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
                     echo "Pushing the Docker image to DockerHub..."
-                    bat "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
+                    sh "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
                 }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                echo "Stopping and removing Docker container..."
+                sh "docker stop ${CONTAINER_ID}"
+                sh "docker rm ${CONTAINER_ID}"
             }
         }
     }
