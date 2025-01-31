@@ -83,12 +83,12 @@ pipeline {
 
                         def imageName = "python-sum"
                         // Correction de la commande docker tag avec les bonnes variables
-                         bat "docker tag python-sum wassim33/python-sum:latest"
+                         bat "docker tag python-sum Kaloucha55/projetjenkins:latest"
 
 
                         echo "Pushing Docker image..."
                         // Poussée de l'image sur DockerHub
-                        bat "docker push wassim33/python-sum:latest"
+                        bat "docker push Kaloucha55/projetjenkins:latest"
                     }
                 }
             }
