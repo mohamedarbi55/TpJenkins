@@ -6,7 +6,7 @@ pipeline {
         SUM_PY_PATH = 'sum.py'
         DIR_PATH = '.'  // Assuming the Dockerfile is in the root of the workspace
         TEST_FILE_PATH = 'variables.txt'
-        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Remplace par ton repository DockerHub
+        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Replace with your DockerHub repository
     }
 
     stages {
@@ -27,9 +27,9 @@ pipeline {
             steps {
                 script {
                     echo "Running Docker container..."
-                    // Supprimer le conteneur existant s'il y en a un
+                    // Remove the existing container if it exists
                     bat 'docker rm -f sum_container || true'
-                    // Lancer un nouveau conteneur
+                    // Run a new container
                     bat 'docker run -d --name sum_container sum_app'
                 }
             }
@@ -38,7 +38,7 @@ pipeline {
             steps {
                 script {
                     echo "Running the sum.py script in the Docker container..."
-                    // Exécuter le script Python à l'intérieur du conteneur
+                    // Execute the Python script inside the container
                     bat "docker exec sum_container python /app/sum.py 5 10"
                 }
             }
@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     echo "Logging in to DockerHub..."
-                    // Utilisation des credentials DockerHub avec 'withCredentials'
+                    // Use DockerHub credentials with 'withCredentials'
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
                         bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
                     }
