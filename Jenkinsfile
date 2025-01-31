@@ -6,8 +6,7 @@ pipeline {
         SUM_PY_PATH = 'sum.py'
         DIR_PATH = '.'  // Assuming the Dockerfile is in the root of the workspace
         TEST_FILE_PATH = 'variables.txt'
-        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Replace with your DockerHub repository
-        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'  // Jenkins credential ID for DockerHub
+        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Remplace par ton repository DockerHub
     }
 
     stages {
@@ -20,8 +19,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    // Build the Docker image using the Dockerfile in the root directory
-                    docker.build("sum_app", "${DIR_PATH}/Dockerfile")
+                    bat "docker build -t sum_app -f ${DIR_PATH}/Dockerfile ${DIR_PATH}"
                 }
             }
         }
@@ -29,9 +27,9 @@ pipeline {
             steps {
                 script {
                     echo "Running Docker container..."
-                    // Remove any existing container if there is one
+                    // Supprimer le conteneur existant s'il y en a un
                     bat 'docker rm -f sum_container || true'
-                    // Run a new container from the built image
+                    // Lancer un nouveau conteneur
                     bat 'docker run -d --name sum_container sum_app'
                 }
             }
@@ -40,7 +38,7 @@ pipeline {
             steps {
                 script {
                     echo "Running the sum.py script in the Docker container..."
-                    // Execute the Python script inside the container
+                    // Exécuter le script Python à l'intérieur du conteneur
                     bat "docker exec sum_container python /app/sum.py 5 10"
                 }
             }
@@ -52,16 +50,14 @@ pipeline {
             steps {
                 script {
                     echo "Logging in to DockerHub..."
-                    // Use the DockerHub credentials stored in Jenkins
-                    docker.withRegistry('https://index.docker.io/v1/', credentialsId: DOCKERHUB_CREDENTIALS) {
-                        echo "Tagging the Docker image..."
-                        // Tag the image with the DockerHub repository name
-                        def image = docker.image('sum_app')
-                        image.tag("${DOCKERHUB_REPO}:latest")
-                        echo "Pubating the Docker image to DockerHub..."
-                        // Pubat the image to DockerHub
-                        image.pubat()
+                    // Utilisation des credentials DockerHub avec 'withCredentials'
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                        bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
                     }
+                    echo "Tagging the Docker image..."
+                    bat "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
+                    echo "Pushing the Docker image to DockerHub..."
+                    bat "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
                 }
             }
         }
