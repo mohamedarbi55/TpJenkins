@@ -2,64 +2,94 @@ pipeline {
     agent any
 
     environment {
-        CONTAINER_ID = ''
-        SUM_PY_PATH = 'sum.py'
-        DIR_PATH = '.'  // Assuming the Dockerfile is in the root of the workspace
-        TEST_FILE_PATH = 'variables.txt'
-        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Replace with your DockerHub repository
+        SUM_PY_PATH = "./sum.py"
+        DIR_PATH = "./"
+        TEST_FILE_PATH = "./variables.txt"
     }
 
     stages {
-        stage('Checkout SCM') {
-            steps {
-                checkout scm
-            }
-        }
         stage('Build') {
             steps {
                 script {
                     echo "Building Docker image..."
-                    bat "docker build -t sum_app -f ${DIR_PATH}/Dockerfile ${DIR_PATH}"
+                    bat "docker build -t sum-calculator ${env.DIR_PATH}"
                 }
             }
         }
+
         stage('Run') {
             steps {
                 script {
                     echo "Running Docker container..."
-                    // Remove existing container if any
-                    bat 'docker rm -f sum_container || exit 0'
-                    // Launch a new container
-                    bat 'docker run -d --name sum_container sum_app'
-                    // Wait a few seconds to make sure the container is running
-                    bat 'timeout /t 5'
+                    def output = bat(
+                        script: "docker run -d sum-calculator",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Raw Output: ${output}"
+                    def containerId = output.tokenize()[-1]?.trim()
+
+                    if (!containerId) {
+                        error "Failed to extract Docker container ID. Output: ${output}"
+                    }
+
+                    echo "Extracted Container ID: ${containerId}"
+                    env.CONTAINER_ID = containerId
                 }
             }
         }
+
         stage('Test') {
             steps {
                 script {
-                    echo "Running the sum.py script in the Docker container..."
-                    // Execute the Python script inside the container
-                    bat "docker exec sum_container python /app/sum.py 5 10"
+                    echo "Starting tests..."
+                    def containerId = env.CONTAINER_ID
+                    echo "Using Container ID: ${containerId}"
+
+                    def testLines = readFile(env.TEST_FILE_PATH).split('\n')
+                    for (line in testLines) {
+                        def vars = line.split(' ')
+                        if (vars.size() < 3) {
+                            echo "Skipping invalid test line: ${line}"
+                            continue
+                        }
+
+                        def arg1 = vars[0]
+                        def arg2 = vars[1]
+                        def expectedSum = vars[2].toFloat()
+
+                        def output = bat(
+                            script: "docker exec ${containerId} python /app/sum.py ${arg1} ${arg2}",
+                            returnStdout: true
+                        ).trim()
+
+                        echo "Test Output: ${output}"
+                    }
                 }
             }
         }
-        stage('Deploy') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
+
+        stage('Deploy to DockerHub') {
             steps {
-                script {
-                    echo "Logging in to DockerHub..."
-                    // Using DockerHub credentials with 'withCredentials'
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                        bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', 
+                    usernameVariable: 'DOCKERHUB_USERNAME', 
+                    passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                    script {
+                        echo "Logging into DockerHub securely..."
+                        // Utilisation du token DockerHub pour l'authentification
+                        bat """
+                        docker login -u %DOCKERHUB_USERNAME% -p %DOCKERHUB_PASSWORD%
+                        """
+
+                        def imageName = "python-sum"
+                        // Correction de la commande docker tag avec les bonnes variables
+                         bat "docker tag python-sum wassim33/python-sum:latest"
+
+
+                        echo "Pushing Docker image..."
+                        // Poussée de l'image sur DockerHub
+                        bat "docker push wassim33/python-sum:latest"
                     }
-                    echo "Tagging the Docker image..."
-                    bat "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
-                    echo "Pushing the Docker image to DockerHub..."
-                    bat "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
                 }
             }
         }
@@ -67,10 +97,10 @@ pipeline {
 
     post {
         always {
+            echo "Cleaning up..."
             script {
-                echo "Stopping and removing Docker container..."
-                bat 'docker stop sum_container || exit 0'
-                bat 'docker rm sum_container || exit 0'
+                bat "docker stop ${env.CONTAINER_ID} || true"
+                bat "docker rm ${env.CONTAINER_ID} || true"
             }
         }
     }
