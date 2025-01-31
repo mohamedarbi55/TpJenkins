@@ -11,6 +11,11 @@ pipeline {
     }
 
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
         stage('Build') {
             steps {
                 script {
@@ -20,34 +25,35 @@ pipeline {
             }
         }
 
-      stage('Run') {
-    steps {
-        script {
-            echo "Running Docker container..."
-            
-            // Supprimer le conteneur existant s'il y en a un
-            bat 'docker rm -f sum_container || true'
-            
-            // Lancer un nouveau conteneur et capturer son ID
-            def output = bat(script: "docker run -d --name sum_container sum_app", returnStdout: true).trim()
-            CONTAINER_ID = output
-            echo "Container started with ID: ${CONTAINER_ID}"
+        stage('Run') {
+            steps {
+                script {
+                    echo "Running Docker container..."
+                    
+                    // Supprimer le conteneur existant s'il y en a un
+                    bat 'docker rm -f sum_container || true'
+                    
+                    // Lancer un nouveau conteneur
+                    bat 'docker run -d --name sum_container sum_app'
+                }
+            }
         }
-    }
-}
 
-stage('Test') {
-    steps {
-        script {
-            echo "Running the sum.py script in the Docker container..."
+        stage('Test') {
+            steps {
+                script {
+                    echo "Running the sum.py script in the Docker container..."
 
-            // Exécuter le script Python à l'intérieur du conteneur
-            bat "docker exec ${CONTAINER_ID} python /app/sum.py 5 10"
+                    // Exécuter le script Python à l'intérieur du conteneur
+                    bat "docker exec sum_container python /app/sum.py 5 10"
+                }
+            }
         }
-    }
-}
 
         stage('Deploy') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
                 script {
                     echo "Logging in to DockerHub..."
@@ -65,8 +71,8 @@ stage('Test') {
         always {
             script {
                 echo "Stopping and removing Docker container..."
-                bat "docker stop ${CONTAINER_ID}"
-                bat "docker rm ${CONTAINER_ID}"
+                bat 'docker stop sum_container || true'
+                bat 'docker rm sum_container || true'
             }
         }
     }
