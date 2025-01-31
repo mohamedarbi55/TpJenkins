@@ -4,7 +4,7 @@ pipeline {
     environment {
         SUM_PY_PATH = "./sum.py"
         DIR_PATH = "./"
-        TEST_FILE_PATH = "./variables.txt"
+        TEST_FILE_PATH = "./test_variables.txt"
     }
 
     stages {
@@ -71,7 +71,7 @@ pipeline {
 
         stage('Deploy to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', 
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', 
                     usernameVariable: 'DOCKERHUB_USERNAME', 
                     passwordVariable: 'DOCKERHUB_PASSWORD')]) {
                     script {
