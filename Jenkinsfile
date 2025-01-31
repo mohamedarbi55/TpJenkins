@@ -6,7 +6,7 @@ pipeline {
         SUM_PY_PATH = 'sum.py'
         DIR_PATH = '.'  // Assuming the Dockerfile is in the root of the workspace
         TEST_FILE_PATH = 'variables.txt'
-        DOCKERHUB_USERNAME = 'mohamed.bouhejba@edu.ece.fr'  // Remplace par ton nom d'utilisateur DockerHub
+        DOCKERHUB_USERNAME = 'mohamed.bouhejba%40edu.ece.fr'  // Remplacer '@' par '%40'
         DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Remplace par ton repository DockerHub
         DOCKERHUB_PASSWORD = 'Larnibo55!!'  // Remplace par ton mot de passe DockerHub
     }
