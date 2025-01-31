@@ -6,11 +6,9 @@ pipeline {
         SUM_PY_PATH = 'sum.py'
         DIR_PATH = '.'  // Assuming the Dockerfile is in the root of the workspace
         TEST_FILE_PATH = 'variables.txt'
-        DOCKERHUB_USERNAME = 'kaloucha55'
-        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'
-        DOCKERHUB_PASSWORD = credentials('dockerhub-password')  // Assuming you have set up Jenkins credentials with ID 'dockerhub-password'
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-
+        DOCKERHUB_USERNAME = 'kaloucha55'  // Remplace par ton nom d'utilisateur DockerHub
+        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Remplace par ton repository DockerHub
+        DOCKERHUB_PASSWORD = 'Kaloucha55!!'  // Remplace par ton mot de passe DockerHub
     }
 
     stages {
@@ -54,16 +52,12 @@ pipeline {
             steps {
                 script {
                     echo "Logging in to DockerHub..."
-                    withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_CREDENTIALS', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-    sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
+                    // Se connecter à DockerHub avec les informations définies dans les variables d'environnement
                     bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
                     echo "Tagging the Docker image..."
                     bat "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
                     echo "Pushing the Docker image to DockerHub..."
                     bat "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
-                    
-}
-
                 }
             }
         }
