@@ -9,6 +9,8 @@ pipeline {
         DOCKERHUB_USERNAME = 'kaloucha55'
         DOCKERHUB_REPO = 'kaloucha55/projetjenkins'
         DOCKERHUB_PASSWORD = credentials('dockerhub-password')  // Assuming you have set up Jenkins credentials with ID 'dockerhub-password'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+
     }
 
     stages {
