@@ -81,9 +81,9 @@ pipeline {
                         docker login -u %DOCKERHUB_USERNAME% -p %DOCKERHUB_PASSWORD%
                         """
 
-                        def imageName = "python-sum"
+                        def imageName = "sum-calculator"
                         // Correction de la commande docker tag avec les bonnes variables
-                         bat "docker tag python-sum Kaloucha55/projetjenkins:latest"
+                         bat "docker tag sum-calculator Kaloucha55/projetjenkins:latest"
 
 
                         echo "Pushing Docker image..."
