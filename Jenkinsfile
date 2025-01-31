@@ -54,11 +54,16 @@ pipeline {
             steps {
                 script {
                     echo "Logging in to DockerHub..."
+                    withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_CREDENTIALS', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+    sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
                     bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
                     echo "Tagging the Docker image..."
                     bat "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
                     echo "Pushing the Docker image to DockerHub..."
                     bat "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
+                    
+}
+
                 }
             }
         }
