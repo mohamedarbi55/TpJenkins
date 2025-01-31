@@ -6,9 +6,8 @@ pipeline {
         SUM_PY_PATH = 'sum.py'
         DIR_PATH = '.'  // Assuming the Dockerfile is in the root of the workspace
         TEST_FILE_PATH = 'variables.txt'
-        DOCKERHUB_USERNAME = 'kaloucha55'  // Remplacer '@' par '%40'
-        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Remplace par ton repository DockerHub
-        DOCKERHUB_PASSWORD = 'Larnibo55!!'  // Remplace par ton mot de passe DockerHub
+        DOCKERHUB_REPO = 'kaloucha55/projetjenkins'  // Replace with your DockerHub repository
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'  // Jenkins credential ID for DockerHub
     }
 
     stages {
@@ -21,7 +20,8 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    bat "docker build -t sum_app -f ${DIR_PATH}/Dockerfile ${DIR_PATH}"
+                    // Build the Docker image using the Dockerfile in the root directory
+                    docker.build("sum_app", "${DIR_PATH}/Dockerfile")
                 }
             }
         }
@@ -29,10 +29,10 @@ pipeline {
             steps {
                 script {
                     echo "Running Docker container..."
-                    // Supprimer le conteneur existant s'il y en a un
-                    bat 'docker rm -f sum_container || true'
-                    // Lancer un nouveau conteneur
-                    bat 'docker run -d --name sum_container sum_app'
+                    // Remove any existing container if there is one
+                    sh 'docker rm -f sum_container || true'
+                    // Run a new container from the built image
+                    sh 'docker run -d --name sum_container sum_app'
                 }
             }
         }
@@ -40,8 +40,8 @@ pipeline {
             steps {
                 script {
                     echo "Running the sum.py script in the Docker container..."
-                    // Exécuter le script Python à l'intérieur du conteneur
-                    bat "docker exec sum_container python /app/sum.py 5 10"
+                    // Execute the Python script inside the container
+                    sh "docker exec sum_container python /app/sum.py 5 10"
                 }
             }
         }
@@ -52,12 +52,16 @@ pipeline {
             steps {
                 script {
                     echo "Logging in to DockerHub..."
-                    // Se connecter à DockerHub avec les informations définies dans les variables d'environnement
-                    bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
-                    echo "Tagging the Docker image..."
-                    bat "docker tag sum_app ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
-                    echo "Pushing the Docker image to DockerHub..."
-                    bat "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPO}:latest"
+                    // Use the DockerHub credentials stored in Jenkins
+                    docker.withRegistry('https://index.docker.io/v1/', credentialsId: DOCKERHUB_CREDENTIALS) {
+                        echo "Tagging the Docker image..."
+                        // Tag the image with the DockerHub repository name
+                        def image = docker.image('sum_app')
+                        image.tag("${DOCKERHUB_REPO}:latest")
+                        echo "Pushing the Docker image to DockerHub..."
+                        // Push the image to DockerHub
+                        image.push()
+                    }
                 }
             }
         }
@@ -67,8 +71,8 @@ pipeline {
         always {
             script {
                 echo "Stopping and removing Docker container..."
-                bat 'docker stop sum_container || true'
-                bat 'docker rm sum_container || true'
+                sh 'docker stop sum_container || true'
+                sh 'docker rm sum_container || true'
             }
         }
     }
