@@ -27,10 +27,12 @@ pipeline {
             steps {
                 script {
                     echo "Running Docker container..."
-                    // Remove the existing container if it exists
-                    bat 'docker rm -f sum_container || true'
-                    // Run a new container
+                    // Remove existing container if any
+                    bat 'docker rm -f sum_container || exit 0'
+                    // Launch a new container
                     bat 'docker run -d --name sum_container sum_app'
+                    // Wait a few seconds to make sure the container is running
+                    bat 'timeout /t 5'
                 }
             }
         }
@@ -50,7 +52,7 @@ pipeline {
             steps {
                 script {
                     echo "Logging in to DockerHub..."
-                    // Use DockerHub credentials with 'withCredentials'
+                    // Using DockerHub credentials with 'withCredentials'
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
                         bat "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
                     }
@@ -67,8 +69,8 @@ pipeline {
         always {
             script {
                 echo "Stopping and removing Docker container..."
-                bat 'docker stop sum_container || true'
-                bat 'docker rm sum_container || true'
+                bat 'docker stop sum_container || exit 0'
+                bat 'docker rm sum_container || exit 0'
             }
         }
     }
