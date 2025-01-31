@@ -30,9 +30,9 @@ pipeline {
                 script {
                     echo "Running Docker container..."
                     // Remove any existing container if there is one
-                    sh 'docker rm -f sum_container || true'
+                    bat 'docker rm -f sum_container || true'
                     // Run a new container from the built image
-                    sh 'docker run -d --name sum_container sum_app'
+                    bat 'docker run -d --name sum_container sum_app'
                 }
             }
         }
@@ -41,7 +41,7 @@ pipeline {
                 script {
                     echo "Running the sum.py script in the Docker container..."
                     // Execute the Python script inside the container
-                    sh "docker exec sum_container python /app/sum.py 5 10"
+                    bat "docker exec sum_container python /app/sum.py 5 10"
                 }
             }
         }
@@ -58,9 +58,9 @@ pipeline {
                         // Tag the image with the DockerHub repository name
                         def image = docker.image('sum_app')
                         image.tag("${DOCKERHUB_REPO}:latest")
-                        echo "Pushing the Docker image to DockerHub..."
-                        // Push the image to DockerHub
-                        image.push()
+                        echo "Pubating the Docker image to DockerHub..."
+                        // Pubat the image to DockerHub
+                        image.pubat()
                     }
                 }
             }
@@ -71,8 +71,8 @@ pipeline {
         always {
             script {
                 echo "Stopping and removing Docker container..."
-                sh 'docker stop sum_container || true'
-                sh 'docker rm sum_container || true'
+                bat 'docker stop sum_container || true'
+                bat 'docker rm sum_container || true'
             }
         }
     }
